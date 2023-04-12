@@ -10,8 +10,6 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
-    console.log("process.env.JWT_TOKEN_SECRET", process.env.JWT_TOKEN_SECRET);
-
     const user = jwt.verify(
       token,
       process.env.JWT_TOKEN_SECRET!
