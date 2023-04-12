@@ -23,7 +23,7 @@ class UserService {
 
     const avatar = gravatar.url(model.email!, {
       size: "200",
-      rating: "pg",
+      rating: "g",
       default: "mm",
     });
 
@@ -50,8 +50,15 @@ class UserService {
       throw new HttpException(400, `UserId is not exist`);
     }
 
+    let avatar = user.avatar;
     if (user.email === model.email) {
       throw new HttpException(400, "You must using the difference email");
+    } else {
+      avatar = gravatar.url(model.email!, {
+        size: '200',
+        rating: 'g',
+        default: 'mm'
+      })
     }
 
     let updateUserById;
@@ -61,6 +68,7 @@ class UserService {
       updateUserById = await this.userSchema
         .findByIdAndUpdate(userId, {
           ...model,
+          avatar: avatar,
           password: hashedPassword,
         })
         .exec();
@@ -68,6 +76,7 @@ class UserService {
       updateUserById = await this.userSchema
         .findByIdAndUpdate(userId, {
           ...model,
+          avatar: avatar
         })
         .exec();
     }
