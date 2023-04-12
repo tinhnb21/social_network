@@ -1,0 +1,11 @@
+{
+  "name": "social_network",
+  "version": "1.0.0",
+  "description": "social network",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "nodemon src/server.ts"
+  },
+  "author": "TinhNB",
+  "license": "MIT"
+}
