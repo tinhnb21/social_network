@@ -21,6 +21,7 @@ class App {
     this.connectToDatabase();
     this.initializeMiddleware();
     this.initializeRoutes(routes);
+    this.initializeErrorMiddleware();
   }
 
   public listen() {
@@ -47,20 +48,23 @@ class App {
       this.app.use(cors({ origin: true, credentials: true }));
     }
 
-    this.app.use(errorMiddleware);
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
   }
 
+  private initializeErrorMiddleware() {
+    this.app.use(errorMiddleware);
+  }
+
   private connectToDatabase() {
-    const connectString = process.env.MONGODB_URI;
-    if (!connectString) {
-      Logger.error("Connection string is invalid");
-      return;
-    }
+    // const connectString = process.env.MONGODB_URI;
+    // if (!connectString) {
+    //   Logger.error("Connection string is invalid");
+    //   return;
+    // }
 
     mongoose
-      .connect(connectString, {
+      .connect("mongodb://localhost:27017/social_network", {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useFindAndModify: false,
