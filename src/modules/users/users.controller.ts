@@ -49,25 +49,36 @@ export default class UsersController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
-  public getAllPaging = async (req: Request, res: Response, next: NextFunction) => {
+  public getAllPaging = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const page: number = Number(req.params.page);
-      const keyword = req.query.keyword || '';
-      const paginationResult = await this.userService.getAllPaging(keyword.toString(), page);
+      const keyword = req.query.keyword || "";
+      const paginationResult = await this.userService.getAllPaging(
+        keyword.toString(),
+        page
+      );
       res.status(200).json(paginationResult);
     } catch (error) {
       next(error);
     }
-  }
+  };
 
-  public deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  public deleteUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const result = await this.userService.deleteUser(req.params.id);
       res.status(200).json(result);
     } catch (error) {
       next(error);
     }
-  }
+  };
 }

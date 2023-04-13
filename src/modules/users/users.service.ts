@@ -54,31 +54,47 @@ class UserService {
     let avatar = user.avatar;
     if (user.email === model.email) {
       throw new HttpException(400, "You must using the difference email");
-    } else {
-      avatar = gravatar.url(model.email!, {
-        size: '200',
-        rating: 'g',
-        default: 'mm'
-      })
     }
+
+    const checkEmailExist = await this.userSchema.find({
+      $and: [{ email: { $eq: model.email } }, { _id: { $ne: userId } }],
+    });
+
+    if (checkEmailExist.length !== 0)
+      throw new HttpException(400, "Your email has been used by another user");
+    avatar = gravatar.url(model.email!, {
+      size: "200",
+      rating: "g",
+      default: "mm",
+    });
 
     let updateUserById;
     if (model.password) {
       const salt = await bcryptjs.genSalt(10);
       const hashedPassword = await bcryptjs.hash(model.password, salt);
       updateUserById = await this.userSchema
-        .findByIdAndUpdate(userId, {
-          ...model,
-          avatar: avatar,
-          password: hashedPassword,
-        })
+        .findByIdAndUpdate(
+          userId,
+          {
+            ...model,
+            avatar: avatar,
+            password: hashedPassword,
+          },
+          {
+            new: true,
+          }
+        )
         .exec();
     } else {
       updateUserById = await this.userSchema
-        .findByIdAndUpdate(userId, {
-          ...model,
-          avatar: avatar
-        })
+        .findByIdAndUpdate(
+          userId,
+          {
+            ...model,
+            avatar: avatar,
+          },
+          { new: true }
+        )
         .exec();
     }
 
@@ -101,14 +117,27 @@ class UserService {
     return users;
   }
 
-  public async getAllPaging(keyword: string, page: number): Promise<IPagination<IUser>> {
+  public async getAllPaging(
+    keyword: string,
+    page: number
+  ): Promise<IPagination<IUser>> {
     const pageSize: number = Number(process.env.PAGE_SIZE) || 10;
     let query = {};
     if (keyword) {
-      query = { $or: [{ email: keyword }, { first_name: keyword }, { last_name: keyword }] }
+      query = {
+        $or: [
+          { email: keyword },
+          { first_name: keyword },
+          { last_name: keyword },
+        ],
+      };
     }
 
-    const users = await this.userSchema.find(query).skip((page - 1) * pageSize).limit(pageSize).exec();
+    const users = await this.userSchema
+      .find(query)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .exec();
     const rowCount = await this.userSchema.find(query).countDocuments().exec();
 
     return {
@@ -121,13 +150,13 @@ class UserService {
 
   public async deleteUser(userId: string): Promise<IUser> {
     const deletedUser = await this.userSchema.findByIdAndDelete(userId).exec();
-    if (!deletedUser) throw new HttpException(409, 'Your id is invalid');
+    if (!deletedUser) throw new HttpException(409, "Your id is invalid");
     return deletedUser;
   }
   private createToken(user: IUser): TokenData {
     const dataInToken: DataStoredInToken = { id: user._id };
     const secret: string = process.env.JWT_TOKEN_SECRET!;
-    const expiresIn: number = 60;
+    const expiresIn: number = 3600;
 
     return {
       token: jwt.sign(dataInToken, secret, { expiresIn: expiresIn }),

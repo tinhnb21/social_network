@@ -30,3 +30,4 @@
 - tsconfig-paths: Nhận ra đường dẫn
 - winston: ghi log (file, console)
 - class-validator: validate dto
+- normalize-url: chuẩn hoá url
