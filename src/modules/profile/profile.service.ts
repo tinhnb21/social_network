@@ -3,6 +3,7 @@ import {
   IEducation,
   IExperience,
   IFollower,
+  IFriend,
   IProfile,
   ISocial,
 } from "./profile.interface";
@@ -255,6 +256,153 @@ class ProfileService {
     await toProfile.save();
 
     return fromProfile;
+  };
+
+  public addFriend = async (fromUserId: string, toUserId: string) => {
+    const fromProfile = await ProfileSchema.findOne({
+      user: fromUserId,
+    }).exec();
+
+    if (!fromProfile)
+      throw new HttpException(400, "There is not profile for your user");
+
+    const toProfile = await ProfileSchema.findOne({
+      user: toUserId,
+    }).exec();
+
+    if (!toProfile)
+      throw new HttpException(400, "There is not profile for target user");
+
+    if (
+      toProfile.friend_requests &&
+      toProfile.friend_requests.some(
+        (follower: IFollower) => follower.user.toString() === toUserId
+      )
+    ) {
+      throw new HttpException(
+        400,
+        "You has been already send a friend request to this user"
+      );
+    }
+
+    if (
+      toProfile.friends &&
+      toProfile.friends.some(
+        (follower: IFollower) => follower.user.toString() === fromUserId
+      )
+    ) {
+      throw new HttpException(
+        400,
+        "Target user has been already be friend this user"
+      );
+    }
+    if (!toProfile.friend_requests) toProfile.friend_requests = [];
+    toProfile.friend_requests.unshift({
+      user: fromUserId,
+    } as IFriend);
+
+    await toProfile.save();
+    return toProfile;
+  };
+
+  public unfriend = async (fromUserId: string, toUserId: string) => {
+    const fromProfile = await ProfileSchema.findOne({
+      user: fromUserId,
+    }).exec();
+
+    if (!fromProfile)
+      throw new HttpException(400, "There is not profile for your user");
+
+    const toProfile = await ProfileSchema.findOne({
+      user: toUserId,
+    }).exec();
+
+    if (!toProfile)
+      throw new HttpException(400, "There is not profile for target user");
+
+    if (
+      toProfile.friends &&
+      toProfile.friends.some(
+        (follower: IFollower) => follower.user.toString() !== fromUserId
+      )
+    ) {
+      throw new HttpException(400, "You has not yet be friend this user");
+    }
+
+    if (!fromProfile.friends) fromProfile.friends = [];
+    fromProfile.friends = fromProfile.friends.filter(
+      ({ user }) => user.toString() !== toUserId
+    );
+
+    if (!toProfile.friends) toProfile.friends = [];
+    toProfile.friends = toProfile.friends.filter(
+      ({ user }) => user.toString() !== fromUserId
+    );
+
+    await fromProfile.save();
+    await toProfile.save();
+
+    return fromProfile;
+  };
+
+  public acceptFriendRequest = async (
+    currentUserId: string,
+    requestUserId: string
+  ) => {
+    const currentProfile = await ProfileSchema.findOne({
+      user: currentUserId,
+    }).exec();
+
+    if (!currentProfile)
+      throw new HttpException(400, "There is not profile for your user");
+
+    const requestProfile = await ProfileSchema.findOne({
+      user: requestUserId,
+    }).exec();
+
+    if (!requestProfile)
+      throw new HttpException(400, "There is not profile for target user");
+
+    if (
+      requestProfile.friends &&
+      requestProfile.friends.some(
+        (friend: IFriend) => friend.user.toString() === currentUserId
+      )
+    ) {
+      throw new HttpException(400, "You are not be friend");
+    }
+
+    if (
+      currentProfile.friends &&
+      currentProfile.friends.some(
+        (friend: IFriend) => friend.user.toString() === requestUserId
+      )
+    ) {
+      throw new HttpException(400, "You has already been friend");
+    }
+
+    if (
+      currentProfile.friend_requests &&
+      currentProfile.friend_requests.some(
+        (friend: IFriend) => friend.user.toString() !== requestUserId
+      )
+    ) {
+      throw new HttpException(
+        400,
+        "You has not any friend request related to this user"
+      );
+    }
+
+    currentProfile.friend_requests = currentProfile.friend_requests.filter(
+      ({ user }) => user.toString() !== requestUserId
+    );
+
+    currentProfile.friends.unshift({ user: requestUserId } as IFriend);
+    requestProfile.friends.unshift({ user: currentUserId } as IFriend);
+
+    await currentProfile.save();
+    await requestProfile.save();
+    return currentProfile;
   };
 }
 

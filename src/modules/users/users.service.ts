@@ -159,7 +159,7 @@ class UserService {
     const expiresIn: number = 3600;
 
     return {
-      token: jwt.sign(dataInToken, secret, { expiresIn: expiresIn }),
+      token: jwt.sign(dataInToken, secret, { expiresIn: "7d" }),
     };
   }
 }

@@ -76,6 +76,24 @@ class ProfileRoute implements Route {
       authMiddleware,
       this.profileController.unfollow
     );
+
+    this.router.post(
+      `${this.path}/friends/:id`,
+      authMiddleware,
+      this.profileController.addFriend
+    );
+
+    this.router.delete(
+      `${this.path}/friends/:id`,
+      authMiddleware,
+      this.profileController.unfriend
+    );
+
+    this.router.put(
+      `${this.path}/friends/:id`,
+      authMiddleware,
+      this.profileController.acceptFriendRequest
+    );
   }
 }
 
