@@ -3,6 +3,7 @@ import { Router } from "express";
 import { authMiddleware, validationMiddleware } from "@core/middleware";
 import PostsController from "./posts.controller";
 import CreatePostDto from "./dtos/create_post.dto";
+import CreateCommentDto from "./dtos/create_comment_dto.dto";
 
 class PostRoute implements Route {
   public path = "/api/v1/posts";
@@ -49,6 +50,19 @@ class PostRoute implements Route {
       `${this.path}/unlike/:id`,
       authMiddleware,
       this.postsController.unlikePost
+    );
+
+    this.router.put(
+      `${this.path}/comments/:id`,
+      authMiddleware,
+      validationMiddleware(CreateCommentDto, true),
+      this.postsController.addComment
+    );
+
+    this.router.put(
+      `${this.path}/comments/:postId/:commentId`,
+      authMiddleware,
+      this.postsController.removeComment
     );
   }
 }
