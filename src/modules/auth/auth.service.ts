@@ -44,7 +44,7 @@ class AuthService {
     const expiresIn: number = 36000;
 
     return {
-      token: jwt.sign(dataInToken, secret, { expiresIn: expiresIn }),
+      token: jwt.sign(dataInToken, secret, { expiresIn: "7d" }),
     };
   }
 }

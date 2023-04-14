@@ -7,6 +7,7 @@ export interface IPost {
   likes: ILike[];
   comments: IComment[];
   shares: IShare[];
+
   date: Date;
 }
 

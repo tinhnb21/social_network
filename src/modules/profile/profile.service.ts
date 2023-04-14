@@ -2,6 +2,7 @@ import { IUser } from "@modules/auth";
 import {
   IEducation,
   IExperience,
+  IFollower,
   IProfile,
   ISocial,
 } from "./profile.interface";
@@ -159,6 +160,101 @@ class ProfileService {
 
     await profile.save();
     return profile;
+  };
+
+  public follow = async (fromUserId: string, toUserId: string) => {
+    const fromProfile = await ProfileSchema.findOne({
+      user: fromUserId,
+    }).exec();
+
+    if (!fromProfile)
+      throw new HttpException(400, "There is not profile for your user");
+
+    const toProfile = await ProfileSchema.findOne({
+      user: toUserId,
+    }).exec();
+
+    if (!toProfile)
+      throw new HttpException(400, "There is not profile for target user");
+
+    if (
+      fromProfile.followings &&
+      fromProfile.followings.some(
+        (follower: IFollower) => follower.user.toString() === toUserId
+      )
+    ) {
+      throw new HttpException(400, "You has been already followed this user");
+    }
+
+    if (
+      toProfile.followers &&
+      toProfile.followers.some(
+        (follower: IFollower) => follower.user.toString() === fromUserId
+      )
+    ) {
+      throw new HttpException(
+        400,
+        "Target user has been already followed this user"
+      );
+    }
+    if (!fromProfile.followings) fromProfile.followings = [];
+    if (!toProfile.followers) toProfile.followers = [];
+    fromProfile.followings.unshift({ user: toUserId });
+    toProfile.followers.unshift({ user: fromUserId });
+
+    await fromProfile.save();
+    await toProfile.save();
+
+    return fromProfile;
+  };
+
+  public unfollow = async (fromUserId: string, toUserId: string) => {
+    const fromProfile = await ProfileSchema.findOne({
+      user: fromUserId,
+    }).exec();
+
+    if (!fromProfile)
+      throw new HttpException(400, "There is not profile for your user");
+
+    const toProfile = await ProfileSchema.findOne({
+      user: toUserId,
+    }).exec();
+
+    if (!toProfile)
+      throw new HttpException(400, "There is not profile for target user");
+
+    if (
+      fromProfile.followings &&
+      fromProfile.followings.some(
+        (follower: IFollower) => follower.user.toString() !== toUserId
+      )
+    ) {
+      throw new HttpException(400, "You has not been yet follwed this user");
+    }
+
+    if (
+      toProfile.followers &&
+      toProfile.followers.some(
+        (follower: IFollower) => follower.user.toString() !== fromUserId
+      )
+    ) {
+      throw new HttpException(400, "You has not being followed this user");
+    }
+
+    if (!fromProfile.followings) fromProfile.followings = [];
+    fromProfile.followings = fromProfile.followings.filter(
+      ({ user }) => user.toString() !== toUserId
+    );
+
+    if (!toProfile.followers) toProfile.followers = [];
+    toProfile.followers = toProfile.followers.filter(
+      ({ user }) => user.toString() !== fromUserId
+    );
+
+    await fromProfile.save();
+    await toProfile.save();
+
+    return fromProfile;
   };
 }
 
