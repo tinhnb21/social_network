@@ -34,4 +34,63 @@ export default class PostsController {
       next(error);
     }
   };
+
+  public getAllPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.postService.getAllPosts();
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getPostById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const postId = req.params.id;
+      const post = await this.postService.getPostById(postId);
+      res.status(200).json(post);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getAllPaging = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const page = Number(req.params.page);
+      const keyword = req.query.keyword || "";
+      const posts = await this.postService.getAllPaging(
+        keyword.toString(),
+        page
+      );
+      res.status(200).json(posts);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public deletePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const postId = req.params.id;
+      const post = await this.postService.deletePost(req.user.id, postId);
+      res.status(200).json(post);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
