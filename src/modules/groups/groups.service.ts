@@ -3,7 +3,6 @@ import { HttpException } from "@core/exceptions";
 import { IGroup, IManager, IMember } from "./groups.interface";
 import CreateGroupDto from "./dtos/create_group.dto";
 import GroupSchema from './groups.model';
-import { profile } from "winston";
 import SetManagerDto from "./dtos/set_manager.dto";
 
 export default class GroupService {
@@ -18,15 +17,11 @@ export default class GroupService {
             $or: [{ name: groupDto.name }, { code: groupDto.code }],
         }).exec();
 
-        console.log('existingGroup', existingGroup);
-
         if (existingGroup.length > 0) throw new HttpException(400, 'Name or code existed');
-
         const newGroup = new GroupSchema({
             ...groupDto
         });
         const group = await newGroup.save();
-
         return group;
     }
 
@@ -48,9 +43,7 @@ export default class GroupService {
             throw new HttpException(400, 'Name or code existed');
 
         const groupFields = { ...groupDto };
-
         const updatedGroup = await GroupSchema.findOneAndUpdate({ _id: groupId }, { $set: groupFields }, { new: true }).exec();
-
         if (!updatedGroup) throw new HttpException(400, "Update is not success");
         return updatedGroup;
     }
@@ -69,7 +62,6 @@ export default class GroupService {
         }).exec();
 
         if (!deletedGroup) throw new HttpException(400, 'Update is not success');
-
         return deletedGroup;
     }
 
@@ -89,7 +81,6 @@ export default class GroupService {
         }
 
         group.member_requests.unshift({ user: userId } as IMember);
-
         await group.save();
         return group;
     }
@@ -110,9 +101,7 @@ export default class GroupService {
         }
 
         group.member_requests = group.member_requests.filter(({ user }) => user.toString() !== userId);
-
         group.members.unshift({ user: userId } as IMember);
-
         await group.save();
         return group;
     }
@@ -129,7 +118,6 @@ export default class GroupService {
         }
 
         group.managers.unshift({ user: request.userId, role: request.role } as IManager);
-
         await group.save();
         return group;
     }
@@ -153,9 +141,7 @@ export default class GroupService {
     public async getAllMembers(groupId: string): Promise<IUser[]> {
         const group = await GroupSchema.findById(groupId).exec();
         if (!group) throw new HttpException(400, "Group id is not exist");
-
         const userIds = group.members.map((member) => { return member.user });
-
         const users = UserSchema.find({ _id: userIds }).select('-password').exec();
         return users;
     }
