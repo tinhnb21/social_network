@@ -64,6 +64,11 @@ class PostRoute implements Route {
             authMiddleware,
             this.groupsController.removeManager
         );
+
+        this.router.get(
+            `${this.path}/members/:id`,
+            this.groupsController.getAllMembers
+        );
     }
 }
 
