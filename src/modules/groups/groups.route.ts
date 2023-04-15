@@ -3,6 +3,7 @@ import { Router } from "express";
 import { authMiddleware, validationMiddleware } from "@core/middleware";
 import GroupsController from "./groups.controller";
 import CreateGroupDto from "./dtos/create_group.dto";
+import SetManagerDto from "./dtos/set_manager.dto";
 
 class PostRoute implements Route {
     public path = "/api/v1/groups";
@@ -40,15 +41,28 @@ class PostRoute implements Route {
         );
 
         this.router.post(
-            `${this.path}/join/:id`,
+            `${this.path}/members/:id`,
             authMiddleware,
             this.groupsController.joinGroup
         );
 
         this.router.put(
-            `${this.path}/:user_id/:group_id`,
+            `${this.path}/members/:user_id/:group_id`,
             authMiddleware,
             this.groupsController.approveJoinRequest
+        );
+
+        this.router.post(
+            `${this.path}/managers/:id`,
+            authMiddleware,
+            validationMiddleware(SetManagerDto, true),
+            this.groupsController.addManager
+        );
+
+        this.router.delete(
+            `${this.path}/managers/:group_id/:user_id`,
+            authMiddleware,
+            this.groupsController.removeManager
         );
     }
 }
