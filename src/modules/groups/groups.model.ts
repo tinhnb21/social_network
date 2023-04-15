@@ -29,14 +29,22 @@ const GroupSchema = new mongoose.Schema({
         {
             users: {
                 type: mongoose.Schema.Types.ObjectId,
-            }
+            },
+            date: {
+                type: Date,
+                default: Date.now
+            },
         }
     ],
     member_requests: [
         {
             users: {
                 type: mongoose.Schema.Types.ObjectId,
-            }
+            },
+            date: {
+                type: Date,
+                default: Date.now
+            },
         }
     ],
     creator: {

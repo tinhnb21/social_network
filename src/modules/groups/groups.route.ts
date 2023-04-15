@@ -38,6 +38,18 @@ class PostRoute implements Route {
             `${this.path}`,
             this.groupsController.getAll
         );
+
+        this.router.post(
+            `${this.path}/join/:id`,
+            authMiddleware,
+            this.groupsController.joinGroup
+        );
+
+        this.router.put(
+            `${this.path}/:user_id/:group_id`,
+            authMiddleware,
+            this.groupsController.approveJoinRequest
+        );
     }
 }
 
