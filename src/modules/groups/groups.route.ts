@@ -69,6 +69,12 @@ class PostRoute implements Route {
             `${this.path}/members/:id`,
             this.groupsController.getAllMembers
         );
+
+        this.router.delete(
+            `${this.path}/members/:group_id/:user_id`,
+            authMiddleware,
+            this.groupsController.removeMember
+        );
     }
 }
 
