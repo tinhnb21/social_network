@@ -7,6 +7,8 @@ import cors from "cors";
 import helmet from "helmet";
 import { Logger } from "@core/utils";
 import { errorMiddleware } from "@core/middleware";
+import YAML from "yamljs";
+import swaggerUI from 'swagger-ui-express';
 
 class App {
   public app: express.Application;
@@ -22,6 +24,7 @@ class App {
     this.initializeMiddleware();
     this.initializeRoutes(routes);
     this.initializeErrorMiddleware();
+    this.initializeSwagger();
   }
 
   public listen() {
@@ -74,6 +77,12 @@ class App {
       .catch((reason: any) => {
         Logger.error(reason);
       });
+  }
+
+  private initializeSwagger() {
+    const swaggerDocument = YAML.load('./src/swagger.yaml');
+
+    this.app.use("/swagger", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
   }
 }
 

@@ -31,3 +31,5 @@
 - winston: ghi log (file, console)
 - class-validator: validate dto
 - normalize-url: chuẩn hoá url
+
+- swagger-ui-express, yamljs: cấu hình swagger
