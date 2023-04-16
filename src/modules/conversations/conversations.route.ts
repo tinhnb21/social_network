@@ -21,6 +21,12 @@ class ConversationsRoute implements Route {
             validationMiddleware(SendMessageDto, true),
             this.conversationsController.sendMessage
         );
+
+        this.router.get(
+            `${this.path}`,
+            authMiddleware,
+            this.conversationsController.getMyConversation
+        );
     }
 }
 
