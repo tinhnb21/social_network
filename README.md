@@ -34,3 +34,8 @@
 
 - swagger-ui-express, yamljs: cấu hình swagger
 - eslint: @typescript-eslint/parser, @typescript-eslint/eslint-plugin --save-dev
+  "husky": {
+  "hooks": {
+  "pre-commit": "yarn lint"
+  }
+  },
