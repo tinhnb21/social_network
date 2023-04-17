@@ -33,3 +33,4 @@
 - normalize-url: chuẩn hoá url
 
 - swagger-ui-express, yamljs: cấu hình swagger
+- eslint: @typescript-eslint/parser, @typescript-eslint/eslint-plugin --save-dev
