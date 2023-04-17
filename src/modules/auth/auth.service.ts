@@ -1,33 +1,36 @@
-import { DataStoredInToken, TokenData } from "@modules/auth";
-import UserSchema from "@modules/users/users.model";
-import { isEmptyObject } from "@core/utils";
-import { HttpException } from "@core/exceptions";
-import bcryptjs from "bcryptjs";
-import { IUser } from "./index";
-import jwt from "jsonwebtoken";
-import LoginDto from "./auth.dto";
+import { DataStoredInToken, TokenData } from '@core/interfaces/auth.interface';
+import UserSchema from '@modules/users/users.model';
+import { isEmptyObject } from '@core/utils';
+import { HttpException } from '@core/exceptions';
+import bcryptjs from 'bcryptjs';
+import { IUser } from './index';
+import jwt from 'jsonwebtoken';
+import LoginDto from './auth.dto';
+import { RefreshTokenSchema } from '@modules/refresh_token';
+import { randomTokenString, generateJwtToken } from '@core/utils/helpers';
 
 class AuthService {
   public userSchema = UserSchema;
 
   public async login(model: LoginDto): Promise<TokenData> {
     if (isEmptyObject(model)) {
-      throw new HttpException(400, "Model is empty");
+      throw new HttpException(400, 'Model is empty');
     }
 
-    const user = await this.userSchema.findOne({ email: model.email });
+    const user = await this.userSchema.findOne({ email: model.email }).exec();
     if (!user) {
       throw new HttpException(409, `Your email ${model.email} is not exist.`);
     }
+    const isMatchPassword = await bcryptjs.compare(model.password!, user.password);
+    if (!isMatchPassword) throw new HttpException(400, 'Credential is not valid');
 
-    const isMacthPassword = await bcryptjs.compare(
-      model.password!,
-      user.password
-    );
-    if (!isMacthPassword)
-      throw new HttpException(400, "Credential is not valid");
+    const refreshToken = await this.generateRefreshToken(user._id);
+    const jwtToken = generateJwtToken(user._id, refreshToken.token);
 
-    return this.createToken(user);
+    // save refresh token
+    await refreshToken.save();
+
+    return jwtToken;
   }
 
   public async getCurrentLoginUser(userId: string): Promise<IUser> {
@@ -38,14 +41,52 @@ class AuthService {
     return user;
   }
 
-  private createToken(user: IUser): TokenData {
-    const dataInToken: DataStoredInToken = { id: user._id };
-    const secret: string = process.env.JWT_TOKEN_SECRET!;
-    const expiresIn: number = 36000;
-
+  private generateJwtToken(userId: string, refreshToken: string): TokenData {
+    const dataInToken: DataStoredInToken = { id: userId };
+    const secret: string = process.env.JWT_TOKEN_SECRET ?? '';
+    const expiresIn = 3600;
     return {
-      token: jwt.sign(dataInToken, secret, { expiresIn: "7d" }),
+      token: jwt.sign(dataInToken, secret, { expiresIn: expiresIn }),
+      refreshToken: refreshToken,
     };
+  }
+
+  public async refreshToken(token: string): Promise<TokenData> {
+    const refreshToken = await this.getRefreshTokenFromDb(token);
+    const { user } = refreshToken;
+
+    // replace old refresh token with a new one and save
+    const newRefreshToken = await this.generateRefreshToken(user);
+    refreshToken.revoked = new Date(Date.now());
+    refreshToken.replacedByToken = newRefreshToken.token;
+    await refreshToken.save();
+    await newRefreshToken.save();
+
+    // return basic details and tokens
+    return this.generateJwtToken(user, newRefreshToken.token);
+  }
+
+  public async revokeToken(token: string): Promise<void> {
+    const refreshToken = await this.getRefreshTokenFromDb(token);
+
+    // revoke token and save
+    refreshToken.revoked = new Date(Date.now());
+    await refreshToken.save();
+  }
+
+  private async getRefreshTokenFromDb(refreshToken: string) {
+    const token = await RefreshTokenSchema.findOne({ refreshToken }).populate('user').exec();
+    if (!token || !token.isActive) throw new HttpException(404, `Invalid token`);
+    return token;
+  }
+
+  private async generateRefreshToken(userId: string) {
+    // create a refresh token that expires in 7 days
+    return new RefreshTokenSchema({
+      user: userId,
+      token: randomTokenString(),
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
   }
 }
 
