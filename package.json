@@ -4,9 +4,9 @@
   "description": "social network",
   "main": "src/server.ts",
   "scripts": {
-    "start": "nodemon src/server.ts",
+    "server": "nodemon src/server.ts",
     "build": "webpack",
-    "run:dev": "cross-env NODE_ENV=development node dist/server.js",
+    "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix"
   },
